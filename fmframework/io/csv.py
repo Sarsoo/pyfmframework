@@ -3,11 +3,11 @@ import datetime
 
 headers = ['track', 'album', 'artist', 'time', 'track id', 'album id', 'artist id']
 
-def exportScrobbles(scrobbles):
+def exportScrobbles(scrobbles, path):
 
-    date = str(datetime.datetime.now())
+    date = str(datetime.datetime.now()).split(' ')[0]
 
-    with open('scrobbles.csv', 'w') as fileobj:
+    with open('{}/{}_scrobbles.csv'.format(path, date), 'w') as fileobj:
 
         writer = csv.DictWriter(fileobj, fieldnames = headers)
         writer.writeheader()
@@ -15,9 +15,9 @@ def exportScrobbles(scrobbles):
         for track in scrobbles:
 
             trackdict = {
-                    'track':track['name'],
-                    'album':track['album']['#text'],
-                    'artist':track['artist']['#text'],
+                    'track':track['name'].replace(';', '_').replace(',', '_'),
+                    'album':track['album']['#text'].replace(';', '_').replace(',', '_'),
+                    'artist':track['artist']['#text'].replace(';', '_').replace(',', '_'),
                     'time': datetime.datetime.fromtimestamp(int(track['date']['uts'])),
                     'track id':track['mbid'],
                     'album id':track['album']['mbid'],

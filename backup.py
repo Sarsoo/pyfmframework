@@ -3,21 +3,17 @@ import fmframework.net.user as user
 
 import sys, datetime, os
 
-def backupScrobbles(): 
+def backupScrobbles(path): 
     userobj = user.User('sarsoo')
 
     scrobbles = userobj.getRecentTracks(pagelimit = 2)
     
     path = sys.argv[1]
     
-    datepath = str(datetime.datetime.now()).split(' ')[0].replace('-', '/')
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    totalpath = os.path.join(path, datepath)
-    pathdir = os.path.dirname(totalpath)
-    if not os.path.exists(totalpath):
-        os.makedirs(totalpath)
-
-    csvwrite.exportScrobbles(scrobbles)
+    csvwrite.exportScrobbles(scrobbles, path)
 
 if __name__ == '__main__':
-    backupScrobbles()
+    backupScrobbles(sys.argv[1])
