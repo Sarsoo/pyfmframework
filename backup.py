@@ -6,7 +6,7 @@ import sys, datetime, os
 def backupScrobbles(path): 
     userobj = user.User('sarsoo')
 
-    scrobbles = userobj.getRecentTracks(pagelimit = 2)
+    scrobbles = userobj.getRecentTracks()
     
     path = sys.argv[1]
     
