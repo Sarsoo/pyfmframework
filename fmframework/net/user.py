@@ -27,7 +27,7 @@ class User:
             
             if req.json()['error'] == 8:
                 print('ERROR: retrying call ' + method)
-                return __makeRequest(method, extra, page)
+                return self.__makeRequest(method, extra, page)
             else:
                 raise ValueError('HTTP Error Raised: ' + str(req.json()['error']) + ' ' + req.json()['message'])
 
