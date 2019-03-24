@@ -13,8 +13,8 @@ def exportScrobbles(scrobbles, path):
         writer.writeheader()
 
         for track in scrobbles:
-
-            trackdict = {
+            if '@attr' not in track:
+                trackdict = {
                     'track':track['name'].replace(';', '_').replace(',', '_'),
                     'album':track['album']['#text'].replace(';', '_').replace(',', '_'),
                     'artist':track['artist']['#text'].replace(';', '_').replace(',', '_'),
@@ -23,4 +23,4 @@ def exportScrobbles(scrobbles, path):
                     'album id':track['album']['mbid'],
                     'artist id':track['artist']['mbid']}
 
-            writer.writerow(trackdict)
+                writer.writerow(trackdict)

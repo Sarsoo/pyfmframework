@@ -21,11 +21,15 @@ class User:
                 }
         data.update(extra)
 
-        req = requests.post('http://ws.audioscrobbler.com/2.0/', data = data)
+        req = requests.get('http://ws.audioscrobbler.com/2.0/', params = data)
     
         if req.status_code < 200 or req.status_code > 299:
             
-            raise ValueError('HTTP Error Raised: ' + str(req.json()['error']) + ' ' + req.json()['message'])
+            if req.json()['error'] == 8:
+                print('ERROR: retrying call ' + method)
+                return __makeRequest(method, extra, page)
+            else:
+                raise ValueError('HTTP Error Raised: ' + str(req.json()['error']) + ' ' + req.json()['message'])
 
         return req.json()
 
