@@ -9,9 +9,9 @@ class Track(LastFM):
                  name: str = None,
                  url: str = None,
                  mbid: str = None,
-                 listeners: int = None,
-                 play_count: int = None,
-                 user_scrobbles: int = None,
+                 listeners: int = 0,
+                 play_count: int = 0,
+                 user_scrobbles: int = 0,
                  wiki: Wiki = None,
                  album: Album = None,
                  artist: Artist = None,
@@ -30,8 +30,8 @@ class Track(LastFM):
         return f'{self.name} / {self.album} / {self.artist}'
 
     def __repr__(self):
-        return super().__repr__() + Color.YELLOW + Color.BOLD + ' Track' + Color.END + \
-               f': album({repr(self.album)}), artist({repr(self.artist)})'
+        return Color.YELLOW + Color.BOLD + 'Track' + Color.END + \
+               f': album({repr(self.album)}), artist({repr(self.artist)}) ' + super().__repr__()
 
     @staticmethod
     def wrap(name: str = None,

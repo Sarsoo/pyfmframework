@@ -27,7 +27,7 @@ class Album(LastFM):
         return f'{self.name} / {self.artist}'
 
     def __repr__(self):
-        return super().__repr__() + Color.DARKCYAN + Color.BOLD + ' Album' + Color.END + f': {self.artist}'
+        return Color.DARKCYAN + Color.BOLD + 'Album' + Color.END + f': {self.artist} ' + super().__repr__()
 
     @staticmethod
     def wrap(name: str = None,

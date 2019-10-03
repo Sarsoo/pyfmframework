@@ -23,4 +23,4 @@ class Artist(LastFM):
         return f'{self.name}'
 
     def __repr__(self):
-        return super().__repr__() + Color.PURPLE + Color.BOLD + ' Artist' + Color.END
+        return Color.PURPLE + Color.BOLD + 'Artist ' + Color.END + super().__repr__()

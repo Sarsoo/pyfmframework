@@ -158,18 +158,18 @@ class Network:
         return Artist(name=artist_dict.get('name', 'n/a'),
                       url=artist_dict.get('url', None),
                       mbid=artist_dict.get('mbid', None),
-                      listeners=artist_dict["stats"].get('listeners', None),
-                      play_count=artist_dict["stats"].get('playcount', None),
-                      user_scrobbles=artist_dict["stats"].get('userplaycount', None),
+                      listeners=int(artist_dict["stats"].get('listeners', 0)),
+                      play_count=int(artist_dict["stats"].get('playcount', 0)),
+                      user_scrobbles=int(artist_dict["stats"].get('userplaycount', 0)),
                       wiki=self.parse_wiki(artist_dict['wiki']) if artist_dict.get('wiki', None) else None)
 
     def parse_album(self, album_dict) -> Album:
         return Album(name=album_dict.get('name', 'n/a'),
                      url=album_dict.get('url', 'n/a'),
                      mbid=album_dict.get('mbid', 'n/a'),
-                     listeners=album_dict.get('listeners', 'n/a'),
-                     play_count=album_dict.get('playcount', 'n/a'),
-                     user_scrobbles=album_dict.get('userplaycount', 'n/a'),
+                     listeners=int(album_dict.get('listeners', 0)),
+                     play_count=int(album_dict.get('playcount', 0)),
+                     user_scrobbles=int(album_dict.get('userplaycount', 0)),
                      wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
                      artist=album_dict.get('artist'))
 
@@ -177,9 +177,9 @@ class Network:
         track = Track(name=track_dict.get('name', 'n/a'),
                       url=track_dict.get('url', 'n/a'),
                       mbid=track_dict.get('mbid', 'n/a'),
-                      listeners=track_dict.get('listeners', 'n/a'),
-                      play_count=track_dict.get('playcount', 'n/a'),
-                      user_scrobbles=track_dict.get('userplaycount', 'n/a'),
+                      listeners=int(track_dict.get('listeners', 0)),
+                      play_count=int(track_dict.get('playcount', 0)),
+                      user_scrobbles=int(track_dict.get('userplaycount', 0)),
                       wiki=self.parse_wiki(track_dict['wiki']) if track_dict.get('wiki', None) else None)
 
         if track_dict.get('album', None):
