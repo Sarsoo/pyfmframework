@@ -1,26 +1,28 @@
-import csv
+from csv import DictWriter
 import datetime
-
+import logging
+from typing import List
+from fmframework.model.fm import Scrobble
+logger = logging.getLogger(__name__)
 headers = ['track', 'album', 'artist', 'time', 'track id', 'album id', 'artist id']
 
-def exportScrobbles(scrobbles, path):
 
-    date = str(datetime.datetime.now()).split(' ')[0]
+def export_scrobbles(scrobbles: List[Scrobble], path: str):
+    logger.info(f'dumping {len(scrobbles)} to {path}')
+    date = str(datetime.date.today())
 
     with open('{}/{}_scrobbles.csv'.format(path, date), 'w') as fileobj:
 
-        writer = csv.DictWriter(fileobj, fieldnames = headers)
+        writer = DictWriter(fileobj, fieldnames=headers)
         writer.writeheader()
 
-        for track in scrobbles:
-            if '@attr' not in track:
-                trackdict = {
-                    'track':track['name'].replace(';', '_').replace(',', '_'),
-                    'album':track['album']['#text'].replace(';', '_').replace(',', '_'),
-                    'artist':track['artist']['#text'].replace(';', '_').replace(',', '_'),
-                    'time': datetime.datetime.fromtimestamp(int(track['date']['uts'])),
-                    'track id':track['mbid'],
-                    'album id':track['album']['mbid'],
-                    'artist id':track['artist']['mbid']}
-
-                writer.writerow(trackdict)
+        for scrobble in scrobbles:
+            writer.writerow({
+                'track': scrobble.track.name.replace(';', '_').replace(',', '_'),
+                'album': scrobble.track.album.name.replace(';', '_').replace(',', '_'),
+                'artist': scrobble.track.artist.name.replace(';', '_').replace(',', '_'),
+                'time': scrobble.time,
+                'track id': scrobble.track.mbid,
+                'album id': scrobble.track.album.mbid,
+                'artist id': scrobble.track.artist.mbid
+            })
