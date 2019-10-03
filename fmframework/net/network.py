@@ -80,10 +80,70 @@ class Network:
             params['to'] = to_time.timestamp()
 
         iterator = PageCollection(net=self, method='user.getrecenttracks', params=params, response_limit=limit)
-        iterator.response_limit = limit
+        iterator.response_limit = limit + 1 if limit is not None else None
         iterator.load()
 
-        return [self.parse_scrobble(i) for i in iterator.items]
+        items = iterator.items
+
+        if items[0].get('@attr', {}).get('nowplaying', None):
+            items.pop(0)
+
+        return [self.parse_scrobble(i) for i in items[:limit]]
+
+    def get_track(self,
+                  name: str,
+                  artist: str,
+                  username: str = None):
+        logger.info(f'getting {name} / {artist} for {self.username if username is None else username}')
+
+        params = {
+            'track': name,
+            'artist': artist,
+            'user': self.username if username is None else username
+        }
+
+        resp = self.get_request('track.getInfo', params=params)
+
+        if resp:
+            return self.parse_track(resp['track'])
+        else:
+            logger.error('no response')
+
+    def get_album(self,
+                  name: str,
+                  artist: str,
+                  username: str = None):
+        logger.info(f'getting {name} / {artist} for {self.username if username is None else username}')
+
+        params = {
+            'album': name,
+            'artist': artist,
+            'user': self.username if username is None else username
+        }
+
+        resp = self.get_request('album.getInfo', params=params)
+
+        if resp:
+            return self.parse_album(resp['album'])
+        else:
+            logger.error('no response')
+
+    def get_artist(self,
+                   name: str,
+                   username: str = None):
+        logger.info(f'getting {name} for {self.username if username is None else username}')
+
+        params = {
+            'artist': name,
+            'user': self.username if username is None else username
+        }
+
+        resp = self.get_request('artist.getInfo', params=params)
+
+        if resp:
+            return self.parse_artist(resp['artist'])
+        else:
+            logger.error('no response')
 
     @staticmethod
     def parse_wiki(wiki_dict) -> Optional[Wiki]:
@@ -98,9 +158,9 @@ class Network:
         return Artist(name=artist_dict.get('name', 'n/a'),
                       url=artist_dict.get('url', None),
                       mbid=artist_dict.get('mbid', None),
-                      listeners=artist_dict.get('listeners', None),
-                      play_count=artist_dict.get('playcount', None),
-                      user_scrobbles=artist_dict.get('userplaycount', None),
+                      listeners=artist_dict["stats"].get('listeners', None),
+                      play_count=artist_dict["stats"].get('playcount', None),
+                      user_scrobbles=artist_dict["stats"].get('userplaycount', None),
                       wiki=self.parse_wiki(artist_dict['wiki']) if artist_dict.get('wiki', None) else None)
 
     def parse_album(self, album_dict) -> Album:

@@ -31,8 +31,8 @@ class LastFM:
                  user_scrobbles: int = None,
                  wiki: Wiki = None):
         self.name = name
-        self.url = url,
-        self.mbid = mbid,
+        self.url = url
+        self.mbid = mbid
         self.listeners = listeners
         self.play_count = play_count
         self.user_scrobbles = user_scrobbles
