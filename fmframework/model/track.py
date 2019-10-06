@@ -31,7 +31,7 @@ class Track(LastFM):
 
     def __repr__(self):
         return Color.YELLOW + Color.BOLD + 'Track' + Color.END + \
-               f': album({repr(self.album)}), artist({repr(self.artist)}) ' + super().__repr__()
+               f': {self.name} album({repr(self.album)}), artist({repr(self.artist)}) ' + super().__repr__()
 
     @staticmethod
     def wrap(name: str = None,

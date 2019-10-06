@@ -2,7 +2,7 @@ import requests
 from typing import Optional, List
 from copy import deepcopy
 import logging
-from datetime import datetime
+from datetime import datetime, date, time, timedelta
 
 from fmframework.model.fm import Scrobble, Wiki
 from fmframework.model.track import Track
@@ -75,9 +75,9 @@ class Network:
         }
 
         if from_time is not None:
-            params['from'] = from_time.timestamp()
+            params['from'] = int(from_time.timestamp())
         if to_time is not None:
-            params['to'] = to_time.timestamp()
+            params['to'] = int(to_time.timestamp())
 
         iterator = PageCollection(net=self, method='user.getrecenttracks', params=params, response_limit=limit)
         iterator.response_limit = limit + 1 if limit is not None else None
@@ -90,10 +90,37 @@ class Network:
 
         return [self.parse_scrobble(i) for i in items[:limit]]
 
+    def get_scrobbles_from_date(self,
+                                input_date: date,
+                                username: str = None,
+                                limit: int = None) -> Optional[List[Scrobble]]:
+        logger.info(f'getting {input_date} scrobbles for {self.username if username is None else username}')
+        midnight = time(hour=0, minute=0, second=0)
+
+        from_date = datetime.combine(date=input_date, time=midnight)
+        to_date = datetime.combine(date=input_date + timedelta(days=1), time=midnight)
+
+        scrobbles = self.get_recent_tracks(username=username, from_time=from_date, to_time=to_date, limit=limit)
+
+        return scrobbles
+
+    def get_scrobble_count_from_date(self,
+                                     input_date: date,
+                                     username: str = None,
+                                     limit: int = None) -> int:
+        logger.info(f'getting {input_date} scrobble count for {self.username if username is None else username}')
+
+        scrobbles = self.get_scrobbles_from_date(input_date=input_date, username=username, limit=limit)
+
+        if scrobbles:
+            return len(scrobbles)
+        else:
+            return 0
+
     def get_track(self,
                   name: str,
                   artist: str,
-                  username: str = None):
+                  username: str = None) -> Optional[Track]:
         logger.info(f'getting {name} / {artist} for {self.username if username is None else username}')
 
         params = {
@@ -112,7 +139,7 @@ class Network:
     def get_album(self,
                   name: str,
                   artist: str,
-                  username: str = None):
+                  username: str = None) -> Optional[Album]:
         logger.info(f'getting {name} / {artist} for {self.username if username is None else username}')
 
         params = {
@@ -130,7 +157,7 @@ class Network:
 
     def get_artist(self,
                    name: str,
-                   username: str = None):
+                   username: str = None) -> Optional[Artist]:
         logger.info(f'getting {name} for {self.username if username is None else username}')
 
         params = {
@@ -173,7 +200,7 @@ class Network:
                      wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
                      artist=album_dict.get('artist'))
 
-    def parse_track(self, track_dict):
+    def parse_track(self, track_dict) -> Track:
         track = Track(name=track_dict.get('name', 'n/a'),
                       url=track_dict.get('url', 'n/a'),
                       mbid=track_dict.get('mbid', 'n/a'),
@@ -191,7 +218,7 @@ class Network:
         return track
 
     @staticmethod
-    def parse_scrobble(scrobble_dict):
+    def parse_scrobble(scrobble_dict) -> Scrobble:
         album = None
         if scrobble_dict.get('album', None):
             album = Album(name=scrobble_dict['album'].get('#text', 'n/a'),
@@ -228,7 +255,7 @@ class PageCollection:
         self.pages: List[Page] = []
         self.page_limit = page_limit
         self.response_limit = response_limit
-        self.counter = 1
+        self.counter = 0
 
     def __len__(self):
         length = 0
