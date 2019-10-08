@@ -5,7 +5,7 @@ import logging
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
-from fmframework.model.fm import Scrobble, Wiki
+from fmframework.model.fm import Scrobble, Wiki, Image
 from fmframework.model.track import Track
 from fmframework.model.album import Album
 from fmframework.model.artist import Artist
@@ -260,7 +260,8 @@ class Network:
                       play_count=int(artist_dict.get('stats', {}).get('playcount', 0)),
                       user_scrobbles=int(artist_dict.get('stats', {}).get('userplaycount',
                                                                           artist_dict.get('playcount', 0))),
-                      wiki=self.parse_wiki(artist_dict['wiki']) if artist_dict.get('wiki', None) else None)
+                      wiki=self.parse_wiki(artist_dict['wiki']) if artist_dict.get('wiki', None) else None,
+                      images=[self.parse_image(i) for i in artist_dict.get('image', [])])
 
     def parse_album(self, album_dict) -> Album:
         return Album(name=album_dict.get('name', album_dict.get('title', 'n/a')),
@@ -270,7 +271,8 @@ class Network:
                      play_count=int(album_dict.get('playcount', 0)),
                      user_scrobbles=int(album_dict.get('userplaycount', 0)),
                      wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
-                     artist=album_dict.get('artist'))
+                     artist=album_dict.get('artist'),
+                     images=[self.parse_image(i) for i in album_dict.get('image', [])])
 
     def parse_track(self, track_dict) -> Track:
         track = Track(name=track_dict.get('name', 'n/a'),
@@ -279,7 +281,8 @@ class Network:
                       listeners=int(track_dict.get('listeners', 0)),
                       play_count=int(track_dict.get('playcount', 0)),
                       user_scrobbles=int(track_dict.get('userplaycount', 0)),
-                      wiki=self.parse_wiki(track_dict['wiki']) if track_dict.get('wiki', None) else None)
+                      wiki=self.parse_wiki(track_dict['wiki']) if track_dict.get('wiki', None) else None,
+                      images=[self.parse_image(i) for i in track_dict.get('image', [])])
 
         if track_dict.get('album', None):
             track.album = self.parse_album(track_dict['album'])
@@ -288,6 +291,10 @@ class Network:
             track.artist = self.parse_artist(track_dict['artist'])
 
         return track
+
+    @staticmethod
+    def parse_image(image_dict) -> Image:
+        return Image(size=Image.Size[image_dict['size']], link=image_dict['#text'])
 
     @staticmethod
     def parse_scrobble(scrobble_dict) -> Scrobble:

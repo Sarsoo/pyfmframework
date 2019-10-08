@@ -1,4 +1,5 @@
-from fmframework.model.fm import LastFM, Wiki
+from typing import List
+from fmframework.model.fm import LastFM, Wiki, Image
 from fmframework.model.artist import Artist
 from fmframework.util.console import Color
 
@@ -13,14 +14,15 @@ class Album(LastFM):
                  user_scrobbles: int = None,
                  wiki: Wiki = None,
                  artist: Artist = None,
-                 ):
+                 images: List[Image] = None):
         super().__init__(name=name,
                          url=url,
                          mbid=mbid,
                          listeners=listeners,
                          play_count=play_count,
                          user_scrobbles=user_scrobbles,
-                         wiki=wiki)
+                         wiki=wiki,
+                         images=images)
         self.artist = artist
 
     def __str__(self):

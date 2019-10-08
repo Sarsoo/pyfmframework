@@ -1,10 +1,24 @@
 from __future__ import annotations
 from fmframework.util.console import Color
 from datetime import datetime
+from enum import Enum
+from typing import List
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from fmframework.model.track import Track
+
+
+class Image:
+    class Size(Enum):
+        small = 1
+        medium = 2
+        large = 3
+        extralarge = 4
+
+    def __init__(self, size: Size, link: str):
+        self.size = size
+        self.link = link
 
 
 class Wiki:
@@ -29,7 +43,8 @@ class LastFM:
                  listeners: int = None,
                  play_count: int = None,
                  user_scrobbles: int = None,
-                 wiki: Wiki = None):
+                 wiki: Wiki = None,
+                 images: List[Image] = None):
         self.name = name
         self.url = url
         self.mbid = mbid
@@ -37,6 +52,7 @@ class LastFM:
         self.play_count = play_count
         self.user_scrobbles = user_scrobbles
         self.wiki = wiki
+        self.images = images
 
     def __str__(self):
         return self.name
