@@ -69,6 +69,22 @@ class Network:
                 else:
                     logger.error(f'{method} {req.status_code}')
 
+    def get_user_scrobble_count(self, username: str = None):
+        if username is None:
+            username = self.username
+        logger.info(f'getting scrobble count {username}')
+
+        params = {
+            'user': username
+        }
+
+        resp = self.get_request(method='user.getinfo', params=params)
+
+        if resp:
+            return int(resp.get('user', {}).get('playcount', None))
+        else:
+            logger.error('no response')
+
     def get_recent_tracks(self,
                           username: str = None,
                           limit: int = None,
