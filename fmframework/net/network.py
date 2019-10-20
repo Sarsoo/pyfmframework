@@ -310,7 +310,10 @@ class Network:
 
     @staticmethod
     def parse_image(image_dict) -> Image:
-        return Image(size=Image.Size[image_dict['size']], link=image_dict['#text'])
+        try:
+            return Image(size=Image.Size[image_dict['size']], link=image_dict['#text'])
+        except KeyError:
+            return Image(size=Image.Size['other'], link=image_dict['#text'])
 
     @staticmethod
     def parse_scrobble(scrobble_dict) -> Scrobble:
