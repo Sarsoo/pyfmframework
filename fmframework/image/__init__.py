@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_blank_image(width, height):
+def get_blank_image(height, width):
     return np.zeros((height, width, 3), np.uint8)
 
 
@@ -35,15 +35,24 @@ def arrange_cover_grid(images: List[np.array], width: int = 5):
     return final_img
 
 
-def get_image_grid_from_objects(net: Network, objects, image_size: Image.Size, image_width: int = 5):
-    logger.debug(f'getting {image_size.name} image grid of {len(objects)} objects at width {image_width}')
+def get_image_grid_from_objects(net: Network, objects, image_size=None, final_scale=(300, 300), image_width: int = 5):
+    logger.debug(f'getting {image_size.name if image_size is not None else "best"} image grid of {len(objects)} objects at width {image_width}')
     images = []
     for counter, iter_object in enumerate(objects):
-        logger.debug(f'downloading image {counter} of {len(objects)}')
+        logger.debug(f'downloading image {counter+1} of {len(objects)}')
         try:
-            images.append(net.download_image_by_size(iter_object, size=image_size))
+            if image_size is None:
+                downloaded = net.download_best_image(iter_object, final_scale=final_scale)
+            else:
+                downloaded = net.download_image_by_size(iter_object, size=image_size)
+
+            if downloaded is not None:
+                images.append(downloaded)
+            else:
+                images.append(get_blank_image(final_scale[0], final_scale[1]))
+
         except ImageSizeNotAvailableException:
-            logger.error(f'{image_size.name} image not available for {iter_object.name}')
+            logger.error(f'{image_size.name if image_size is not None else "best"} image not available for {iter_object.name}')
 
     grid_image = arrange_cover_grid(images=images, width=image_width)
     return grid_image
@@ -56,8 +65,8 @@ def chunk(l, n):
 
 def generate_album_chart_grid(net: Network,
                               chart_range: Network.Range,
-                              image_size: Image.Size = Image.Size.extralarge,
-                              limit: int = 100,
+                              image_size: Image.Size = None,
+                              limit: int = 20,
                               image_width: int = 5):
     chart = net.get_top_albums(period=chart_range, limit=limit)
     return get_image_grid_from_objects(net=net, objects=chart, image_size=image_size, image_width=image_width)

@@ -11,12 +11,12 @@ if TYPE_CHECKING:
 
 class Image:
     class Size(Enum):
+        other = 0
         small = 1
         medium = 2
         large = 3
         extralarge = 4
         mega = 5
-        other = 6
 
     def __init__(self, size: Size, link: str):
         self.size = size

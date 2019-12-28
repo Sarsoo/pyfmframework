@@ -2,6 +2,7 @@ import requests
 from typing import Optional, List, Union
 from copy import deepcopy
 import logging
+import os
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
@@ -12,6 +13,7 @@ from fmframework.model.fm import Scrobble, Wiki, Image, WeeklyChart
 from fmframework.model.track import Track
 from fmframework.model.album import Album
 from fmframework.model.artist import Artist
+from fmframework import config_directory
 
 logger = logging.getLogger(__name__)
 
@@ -279,14 +281,49 @@ class Network:
         except AttributeError:
             logger.error(f'{fm_object} has no images')
 
+    def download_best_image(self, fm_object: Union[Track, Album, Artist], final_scale=None):
+        try:
+            images = sorted(fm_object.images, key=lambda x: x.size.value, reverse=True)
+
+            for image in images:
+
+                downloaded = self.download_image(image_pointer=image)
+                if downloaded is not None:
+
+                    if final_scale is not None:
+                        if downloaded.shape != final_scale:
+                            downloaded = cv2.resize(downloaded, final_scale)
+
+                    return downloaded
+                else:
+                    logger.error('null image returned, iterating')
+        except AttributeError:
+            logger.error(f'{fm_object} has no images')
+
     @staticmethod
-    def download_image(image_pointer: Image):
+    def download_image(image_pointer: Image, cache=True):
         logger.info(f'downloading {image_pointer.size.name} image - {image_pointer.link}')
+        if image_pointer.link is None or len(image_pointer.link) == 0 or image_pointer.link == '':
+            logger.error('invalid image url')
+            return None
+
+        url_split = image_pointer.link.split('/')
+        cache_path = os.path.join(config_directory, 'cache')
+        file_path = os.path.join(cache_path, url_split[-2]+url_split[-1])
+
+        if os.path.exists(file_path):
+            return cv2.imread(file_path)
+
         resp = requests.get(image_pointer.link, stream=True)
 
         if 200 <= resp.status_code < 300:
             image = np.asarray(bytearray(resp.content), dtype="uint8")
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            if cache:
+                if not os.path.exists(cache_path):
+                    os.makedirs(cache_path)
+                if not cv2.imwrite(filename=file_path, img=image):
+                    logger.error('failed to dump to cache')
             return image
         else:
             logger.error(f'http error {resp.status_code}')

@@ -18,7 +18,7 @@ def get_album_chart_image(net: Network,
                           from_date: date,
                           to_date: date,
                           limit: int = 20,
-                          image_size: Image.Size = Image.Size.extralarge,
+                          image_size: Image.Size = None,
                           image_width: int = 5):
     album_chart = get_populated_album_chart(net=net, username=username,
                                             from_date=from_date, to_date=to_date,
@@ -34,7 +34,7 @@ def get_populated_album_chart(net: Network, username: str, from_date: date, to_d
     logger.info('populating scraped albums')
     albums = []
     for counter, scraped in enumerate(chart):
-        logger.debug(f'populating {counter} of {len(chart)}')
+        logger.debug(f'populating {counter+1} of {len(chart)}')
         albums.append(net.get_album(name=scraped.name, artist=scraped.artist.name))
 
     return albums
