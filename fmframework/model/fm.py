@@ -22,6 +22,9 @@ class Image:
         self.size = size
         self.link = link
 
+    def __str__(self):
+        return f'{self.size.name} - {self.link}'
+
 
 class Wiki:
     def __init__(self,
@@ -63,6 +66,23 @@ class LastFM:
         return Color.RED + Color.BOLD + 'LastFM' + Color.END + \
                f': {self.name}, user({self.user_scrobbles}), play_count({self.play_count}), ' \
                 f'listeners({self.listeners}), wiki({self.wiki})'
+
+
+class WeeklyChart:
+    def __init__(self, from_time, to_time):
+        self.from_secs = from_time
+        self.to_secs = to_time
+
+    @property
+    def from_date(self):
+        return datetime.fromtimestamp(self.from_secs)
+
+    @property
+    def to_date(self):
+        return datetime.fromtimestamp(self.to_secs)
+
+    def __str__(self):
+        return f'{self.from_secs} -> {self.to_secs}'
 
 
 class Scrobble:

@@ -1,16 +1,23 @@
 import requests
-from typing import Optional, List
+from typing import Optional, List, Union
 from copy import deepcopy
 import logging
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
-from fmframework.model.fm import Scrobble, Wiki, Image
+import numpy as np
+import cv2
+
+from fmframework.model.fm import Scrobble, Wiki, Image, WeeklyChart
 from fmframework.model.track import Track
 from fmframework.model.album import Album
 from fmframework.model.artist import Artist
 
 logger = logging.getLogger(__name__)
+
+
+class ImageSizeNotAvailableException(Exception):
+    pass
 
 
 class Network:
@@ -258,6 +265,85 @@ class Network:
         iterator.load()
 
         return [self.parse_artist(i) for i in iterator.items]
+
+    def download_image_by_size(self, fm_object: Union[Track, Album, Artist], size: Image.Size):
+        try:
+            images = fm_object.images
+
+            image_pointer = next((i for i in images if i.size == size), None)
+            if image_pointer is not None:
+                return self.download_image(image_pointer=image_pointer)
+            else:
+                logger.error(f'image of size {size.name} not found')
+                raise ImageSizeNotAvailableException
+        except AttributeError:
+            logger.error(f'{fm_object} has no images')
+
+    @staticmethod
+    def download_image(image_pointer: Image):
+        logger.info(f'downloading {image_pointer.size.name} image - {image_pointer.link}')
+        resp = requests.get(image_pointer.link, stream=True)
+
+        if 200 <= resp.status_code < 300:
+            image = np.asarray(bytearray(resp.content), dtype="uint8")
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            return image
+        else:
+            logger.error(f'http error {resp.status_code}')
+
+    def get_weekly_charts(self, username: str = None):
+        logger.info('getting weekly chart list')
+
+        params = {'user': self.username if username is None else username}
+        resp = self.get_request('user.getweeklychartlist', params=params)
+        if resp:
+            return [WeeklyChart(from_time=int(i['from']), to_time=int(i['to']))
+                    for i in resp.get('weeklychartlist', {}).get('chart', [])]
+        else:
+            logger.error('no response')
+
+    def get_weekly_chart(self,
+                         object_type,
+                         chart: WeeklyChart = None,
+                         from_time: int = None,
+                         to_time: int = None,
+                         username: str = None,
+                         limit: int = None):
+
+        if object_type not in ['album', 'artist', 'track']:
+            raise ValueError('invalid object type')
+
+        if chart is None and (from_time is None or to_time is None):
+            raise ValueError('no time range')
+
+        if chart is not None:
+            from_time = chart.from_secs
+            to_time = chart.to_secs
+
+        if limit is not None:
+            logger.info(f'pulling top {limit} {object_type}s from {chart.from_date} to {chart.to_date} '
+                        f'for {self.username if username is None else username}')
+        else:
+            logger.info(f'pulling top {object_type}s from {chart.from_date} to {chart.to_date} '
+                        f'for {self.username if username is None else username}')
+
+        params = {
+            'user': self.username if username is None else username,
+            'from': from_time,
+            'to': to_time
+        }
+
+        resp = self.get_request(method=f'user.getweekly{object_type}chart', params=params)
+
+        if resp:
+            if object_type == 'track':
+                return [self.parse_track(i) for i in resp.get('weeklytrackchart', {}).get('track', [])]
+            elif object_type == 'album':
+                return [self.parse_album(i) for i in resp.get('weeklyalbumchart', {}).get('album', [])]
+            elif object_type == 'artist':
+                return [self.parse_artist(i) for i in resp.get('weeklyartistchart', {}).get('artist', [])]
+        else:
+            logger.error('no response')
 
     @staticmethod
     def parse_wiki(wiki_dict) -> Optional[Wiki]:
