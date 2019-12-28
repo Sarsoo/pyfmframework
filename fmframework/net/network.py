@@ -245,7 +245,7 @@ class Network:
         iterator = PageCollection(net=self, method='user.gettopalbums', params=params, response_limit=limit)
         iterator.load()
 
-        return [self.parse_album(i) for i in iterator.items]
+        return [self.parse_chart_album(i) for i in iterator.items]
 
     def get_top_artists(self,
                         period: Range,
@@ -281,7 +281,7 @@ class Network:
         except AttributeError:
             logger.error(f'{fm_object} has no images')
 
-    def download_best_image(self, fm_object: Union[Track, Album, Artist], final_scale=None):
+    def download_best_image(self, fm_object: Union[Track, Album, Artist], final_scale=None, add_count: bool = False):
         try:
             images = sorted(fm_object.images, key=lambda x: x.size.value, reverse=True)
 
@@ -294,11 +294,38 @@ class Network:
                         if downloaded.shape != final_scale:
                             downloaded = cv2.resize(downloaded, final_scale)
 
+                    if add_count:
+                        self.add_scrobble_count_to_image(downloaded, fm_object.user_scrobbles)
+
                     return downloaded
                 else:
                     logger.error('null image returned, iterating')
         except AttributeError:
             logger.error(f'{fm_object} has no images')
+
+    @staticmethod
+    def add_scrobble_count_to_image(image, count: int):
+        cv2.putText(image,
+                    f'{count:,}',
+                    (11, 36),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 0, 0),
+                    2)
+        cv2.putText(image,
+                    f'{count:,}',
+                    (11, 38),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 0, 0),
+                    2)
+        cv2.putText(image,
+                    f'{count:,}',
+                    (9, 35),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (255, 255, 255),
+                    2)
 
     @staticmethod
     def download_image(image_pointer: Image, cache=True):
@@ -409,6 +436,16 @@ class Network:
                      listeners=int(album_dict.get('listeners', 0)),
                      play_count=int(album_dict.get('playcount', 0)),
                      user_scrobbles=int(album_dict.get('userplaycount', 0)),
+                     wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
+                     artist=album_dict.get('artist'),
+                     images=[self.parse_image(i) for i in album_dict.get('image', [])])
+
+    def parse_chart_album(self, album_dict) -> Album:
+        return Album(name=album_dict.get('name', album_dict.get('title', 'n/a')),
+                     url=album_dict.get('url', 'n/a'),
+                     mbid=album_dict.get('mbid', 'n/a'),
+                     listeners=int(album_dict.get('listeners', 0)),
+                     user_scrobbles=int(album_dict.get('playcount', 0)),
                      wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
                      artist=album_dict.get('artist'),
                      images=[self.parse_image(i) for i in album_dict.get('image', [])])
