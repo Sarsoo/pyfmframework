@@ -167,7 +167,10 @@ class Network:
         resp = self.get_request('track.getInfo', params=params)
 
         if resp:
-            return self.parse_track(resp['track'])
+            if resp.get('track'):
+                return self.parse_track(resp['track'])
+            else:
+                logging.error(f'abnormal response - {resp}')
         else:
             logger.error('no response')
 
@@ -186,7 +189,10 @@ class Network:
         resp = self.get_request('album.getInfo', params=params)
 
         if resp:
-            return self.parse_album(resp['album'])
+            if resp.get('album'):
+                return self.parse_album(resp['album'])
+            else:
+                logging.error(f'abnormal response - {resp}')
         else:
             logger.error('no response')
 
@@ -203,7 +209,10 @@ class Network:
         resp = self.get_request('artist.getInfo', params=params)
 
         if resp:
-            return self.parse_artist(resp['artist'])
+            if resp.get('artist'):
+                return self.parse_artist(resp['artist'])
+            else:
+                logging.error(f'abnormal response - {resp}')
         else:
             logger.error('no response')
 
