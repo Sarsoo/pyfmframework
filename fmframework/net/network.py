@@ -98,7 +98,8 @@ class Network:
                           username: str = None,
                           limit: int = None,
                           from_time: datetime = None,
-                          to_time: datetime = None) -> Optional[List[Scrobble]]:
+                          to_time: datetime = None,
+                          page_limit: int = 50) -> Optional[List[Scrobble]]:
         if limit is not None:
             logger.info(f'pulling {limit} tracks')
         else:
@@ -113,7 +114,7 @@ class Network:
         if to_time is not None:
             params['to'] = int(to_time.timestamp())
 
-        iterator = PageCollection(net=self, method='user.getrecenttracks', params=params, response_limit=limit)
+        iterator = PageCollection(net=self, method='user.getrecenttracks', params=params, response_limit=limit, page_limit=page_limit)
         iterator.response_limit = limit + 1 if limit is not None else None
         iterator.load()
 
