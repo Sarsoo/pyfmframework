@@ -1,4 +1,7 @@
 fmframework
 ================
 
-python scripting framework for last.fm
+Python net wrapper and scripting framework for Last.fm.
+component library of [Music Tools](https://github.com/Sarsoo/Music-Tools).
+
+* Photo downloading and arrangement using OpenCV (Charts)

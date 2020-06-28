@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from fmframework.net.network import Network, ImageSizeNotAvailableException
-from fmframework.model.fm import Image
+from fmframework.model import Image
 
 import logging
 logger = logging.getLogger(__name__)

@@ -2,7 +2,8 @@ from csv import DictWriter
 import datetime
 import logging
 from typing import List
-from fmframework.model.fm import Scrobble
+from fmframework.model import Scrobble
+
 logger = logging.getLogger(__name__)
 headers = ['track', 'album', 'artist', 'time', 'track id', 'album id', 'artist id']
 

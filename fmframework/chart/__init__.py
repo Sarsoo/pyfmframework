@@ -2,10 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 from datetime import date
 
-from fmframework.model.album import Album
-from fmframework.model.artist import Artist
-from fmframework.model.fm import Image
-from fmframework.net.network import Network
+from fmframework.model import Album, Artist, Image
+from fmframework.net.network import Network, LastFMNetworkException
 import fmframework.image
 
 import logging
@@ -35,7 +33,10 @@ def get_populated_album_chart(net: Network, username: str, from_date: date, to_d
     albums = []
     for counter, scraped in enumerate(chart):
         logger.debug(f'populating {counter+1} of {len(chart)}')
-        albums.append(net.get_album(name=scraped.name, artist=scraped.artist.name))
+        try:
+            albums.append(net.get_album(name=scraped.name, artist=scraped.artist.name))
+        except LastFMNetworkException as e:
+            logger.error(f'error occured during album retrieval - {e}')
 
     return albums
 
