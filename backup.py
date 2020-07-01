@@ -1,5 +1,5 @@
 from fmframework.io.csv import export_scrobbles
-from fmframework.net.network import Network
+from fmframework.net.network import Network, LastFMNetworkException
 
 import sys
 import os
@@ -7,32 +7,28 @@ import logging
 
 logger = logging.getLogger('fmframework')
 
-log_format = '%(asctime)s %(levelname)s %(name)s - %(funcName)s - %(message)s'
-
 file_handler = logging.FileHandler(".fm/backup.log")
-formatter = logging.Formatter(log_format)
-file_handler.setFormatter(formatter)
-
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(name)s - %(funcName)s - %(message)s'))
 logger.addHandler(file_handler)
 
-stream_log_format = '%(levelname)s %(name)s:%(funcName)s - %(message)s'
-stream_formatter = logging.Formatter(stream_log_format)
-
 stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(stream_formatter)
-
+stream_handler.setFormatter(logging.Formatter('%(levelname)s %(name)s:%(funcName)s - %(message)s'))
 logger.addHandler(stream_handler)
 
 
 def backup_scrobbles(file_path):
     net = Network(username='sarsoo', api_key=os.environ['FMKEY'])
 
-    scrobbles = net.get_recent_tracks()
-    
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
+    try:
+        scrobbles = net.get_recent_tracks()
 
-    export_scrobbles(scrobbles, file_path)
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+
+        export_scrobbles(scrobbles, file_path)
+
+    except LastFMNetworkException:
+        logger.exception('error during scrobble retrieval')
 
 
 if __name__ == '__main__':

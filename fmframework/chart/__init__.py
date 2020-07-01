@@ -35,8 +35,8 @@ def get_populated_album_chart(net: Network, username: str, from_date: date, to_d
         logger.debug(f'populating {counter+1} of {len(chart)}')
         try:
             albums.append(net.get_album(name=scraped.name, artist=scraped.artist.name))
-        except LastFMNetworkException as e:
-            logger.error(f'error occured during album retrieval - {e}')
+        except LastFMNetworkException:
+            logger.exception(f'error occured during album retrieval')
 
     return albums
 
