@@ -1,23 +1,15 @@
 import requests
 from dataclasses import dataclass
-from typing import Optional, List, Union
+from typing import Optional, List
 from copy import deepcopy
 import logging
-import os
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
-import numpy as np
-import cv2
-
 from fmframework.model import Album, Artist, Image, Wiki, WeeklyChart, Scrobble, Track
-from fmframework import config_directory
+
 
 logger = logging.getLogger(__name__)
-
-
-class ImageSizeNotAvailableException(Exception):
-    pass
 
 
 @dataclass
@@ -275,93 +267,6 @@ class Network:
         iterator.load()
 
         return [self.parse_artist(i) for i in iterator.items]
-
-    def download_image_by_size(self, fm_object: Union[Track, Album, Artist], size: Image.Size):
-        try:
-            images = fm_object.images
-
-            image_pointer = next((i for i in images if i.size == size), None)
-            if image_pointer is not None:
-                return self.download_image(image_pointer=image_pointer)
-            else:
-                logger.error(f'image of size {size.name} not found')
-                raise ImageSizeNotAvailableException
-        except AttributeError:
-            logger.error(f'{fm_object} has no images')
-
-    def download_best_image(self, fm_object: Union[Track, Album, Artist], final_scale=None, add_count: bool = False):
-        try:
-            images = sorted(fm_object.images, key=lambda x: x.size.value, reverse=True)
-
-            for image in images:
-
-                downloaded = self.download_image(image_pointer=image)
-                if downloaded is not None:
-
-                    if final_scale is not None:
-                        if downloaded.shape != final_scale:
-                            downloaded = cv2.resize(downloaded, final_scale)
-
-                    if add_count:
-                        self.add_scrobble_count_to_image(downloaded, fm_object.user_scrobbles)
-
-                    return downloaded
-                else:
-                    logger.error('null image returned, iterating')
-        except AttributeError:
-            logger.error(f'{fm_object} has no images')
-
-    @staticmethod
-    def add_scrobble_count_to_image(image, count: int):
-        cv2.putText(image,
-                    f'{count:,}',
-                    (11, 36),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 0, 0),
-                    2)
-        cv2.putText(image,
-                    f'{count:,}',
-                    (11, 38),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 0, 0),
-                    2)
-        cv2.putText(image,
-                    f'{count:,}',
-                    (9, 35),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (255, 255, 255),
-                    2)
-
-    @staticmethod
-    def download_image(image_pointer: Image, cache=True):
-        logger.info(f'downloading {image_pointer.size.name} image - {image_pointer.link}')
-        if image_pointer.link is None or len(image_pointer.link) == 0 or image_pointer.link == '':
-            logger.error('invalid image url')
-            return None
-
-        url_split = image_pointer.link.split('/')
-        cache_path = os.path.join(config_directory, 'cache')
-        file_path = os.path.join(cache_path, url_split[-2]+url_split[-1])
-
-        if os.path.exists(file_path):
-            return cv2.imread(file_path)
-
-        resp = requests.get(image_pointer.link, stream=True)
-
-        if 200 <= resp.status_code < 300:
-            image = np.asarray(bytearray(resp.content), dtype="uint8")
-            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-            if cache:
-                if not os.path.exists(cache_path):
-                    os.makedirs(cache_path)
-                if not cv2.imwrite(filename=file_path, img=image):
-                    logger.error('failed to dump to cache')
-            return image
-        else:
-            logger.error(f'http error {resp.status_code}')
 
     def get_weekly_charts(self, username: str = None):
         logger.info('getting weekly chart list')

@@ -2,33 +2,18 @@ from bs4 import BeautifulSoup
 import requests
 from datetime import date
 
-from fmframework.model import Album, Artist, Image
+from fmframework.model import Album, Artist
 from fmframework.net.network import Network, LastFMNetworkException
-import fmframework.image
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def get_album_chart_image(net: Network,
-                          username: str,
-                          from_date: date,
-                          to_date: date,
-                          limit: int = 20,
-                          image_size: Image.Size = None,
-                          image_width: int = 5):
-    album_chart = get_populated_album_chart(net=net, username=username,
-                                            from_date=from_date, to_date=to_date,
-                                            limit=limit)
-    return fmframework.image.get_image_grid_from_objects(net=net,
-                                                         objects=album_chart,
-                                                         image_size=image_size,
-                                                         image_width=image_width)
-
-
 def get_populated_album_chart(net: Network, username: str, from_date: date, to_date: date, limit: int):
-    chart = get_scraped_album_chart(username, from_date, to_date, limit)
+    """Scrape chart from last.fm frontend before pulling each from the backend for a complete object"""
+
+    chart = get_scraped_album_chart(username or net.username, from_date, to_date, limit)
     logger.info('populating scraped albums')
     albums = []
     for counter, scraped in enumerate(chart):
@@ -42,6 +27,8 @@ def get_populated_album_chart(net: Network, username: str, from_date: date, to_d
 
 
 def get_scraped_album_chart(username: str, from_date: date, to_date: date, limit: int):
+    """Scrape 'light' objects from last.fm frontend based on date range and limit"""
+
     logger.info(f'scraping album chart from {from_date} to {to_date} for {username}')
 
     pages = int(limit / 50)
@@ -58,6 +45,8 @@ def get_scraped_album_chart(username: str, from_date: date, to_date: date, limit
 
 
 def get_scraped_album_chart_page(username: str, from_date: date, to_date: date, page: int):
+    """Scrape 'light' objects single page of last.fm frontend based on date range"""
+
     logger.debug(f'loading page {page} from {from_date} to {to_date} for {username}')
 
     html = requests.get(f'https://www.last.fm/user/{username}/library/albums'

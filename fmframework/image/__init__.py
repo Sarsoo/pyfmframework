@@ -1,6 +1,10 @@
 import numpy as np
 from typing import List
-from fmframework.net.network import Network, ImageSizeNotAvailableException
+from datetime import date
+
+from fmframework.net.network import Network
+from fmframework.chart import get_populated_album_chart
+from fmframework.image.downloader import Downloader, ImageSizeNotAvailableException
 from fmframework.model import Image
 
 import logging
@@ -35,18 +39,39 @@ def arrange_cover_grid(images: List[np.array], width: int = 5):
     return final_img
 
 
-def get_image_grid_from_objects(net: Network, objects, image_size=None, final_scale=(300, 300), image_width: int = 5):
-    logger.debug(f'getting {image_size.name if image_size is not None else "best"} image grid of {len(objects)} objects at width {image_width}')
+def get_image_grid_from_objects(objects,
+                                image_size=None,
+                                final_scale=(300, 300),
+                                image_width: int = 5,
+                                overlay_count: bool = False,
+                                loader=None,
+                                check_cache=True,
+                                cache=True):
+    logger.debug(f'getting {image_size.name if image_size is not None else "best"} image grid '
+                 f'of {len(objects)} objects at width {image_width}')
+
+    if loader is None:
+        loader = Downloader()
+
     images = []
     for counter, iter_object in enumerate(objects):
         logger.debug(f'downloading image {counter+1} of {len(objects)}')
         try:
             if image_size is None:
-                downloaded = net.download_best_image(iter_object, final_scale=final_scale)
+                downloaded = loader.download_best_image(iter_object,
+                                                        final_scale=final_scale,
+                                                        check_cache=check_cache,
+                                                        cache=cache)
             else:
-                downloaded = net.download_image_by_size(iter_object, size=image_size)
+                downloaded = loader.download_image_by_size(iter_object,
+                                                           size=image_size,
+                                                           check_cache=check_cache,
+                                                           cache=cache)
 
             if downloaded is not None:
+                if overlay_count:
+                    loader.add_scrobble_count_to_image(downloaded, iter_object.user_scrobbles)
+
                 images.append(downloaded)
             else:
                 images.append(get_blank_image(final_scale[0], final_scale[1]))
@@ -63,10 +88,47 @@ def chunk(l, n):
         yield l[i:i+n]
 
 
-def generate_album_chart_grid(net: Network,
-                              chart_range: Network.Range,
-                              image_size: Image.Size = None,
-                              limit: int = 20,
-                              image_width: int = 5):
-    chart = net.get_top_albums(period=chart_range, limit=limit)
-    return get_image_grid_from_objects(net=net, objects=chart, image_size=image_size, image_width=image_width)
+class AlbumChartCollage:
+
+    @staticmethod
+    def from_relative_range(net: Network,
+                            chart_range: Network.Range,
+                            username: str = None,
+                            limit: int = 20,
+                            overlay_count: bool = False,
+                            image_size: Image.Size = None,
+                            image_width: int = 5,
+                            check_cache=True,
+                            cache=True):
+        chart = net.get_top_albums(username=username,
+                                   period=chart_range,
+                                   limit=limit)
+        return get_image_grid_from_objects(objects=chart,
+                                           image_size=image_size,
+                                           image_width=image_width,
+                                           overlay_count=overlay_count,
+                                           check_cache=check_cache,
+                                           cache=cache)
+
+    @staticmethod
+    def from_dates(net: Network,
+                   from_date: date,
+                   to_date: date,
+                   username: str = None,
+                   limit: int = 20,
+                   overlay_count: bool = False,
+                   image_size: Image.Size = None,
+                   image_width: int = 5,
+                   check_cache=True,
+                   cache=True):
+        chart = get_populated_album_chart(net=net,
+                                          username=username,
+                                          from_date=from_date,
+                                          to_date=to_date,
+                                          limit=limit)
+        return get_image_grid_from_objects(objects=chart,
+                                           image_size=image_size,
+                                           image_width=image_width,
+                                           overlay_count=overlay_count,
+                                           check_cache=check_cache,
+                                           cache=cache)
