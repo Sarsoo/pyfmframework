@@ -47,27 +47,40 @@ class LastFM:
         return self.name
 
 
-@dataclass
+@dataclass(eq=False)
 class Artist(LastFM):
     def __str__(self):
         return f'{self.name}'
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and self.name == other.name
 
-@dataclass
+
+@dataclass(eq=False)
 class Album(LastFM):
     artist: Artist = None
 
     def __str__(self):
         return f'{self.name} / {self.artist}'
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ \
+               and \
+               (self.name, self.artist) == (other.name, other.artist)
 
-@dataclass
+
+@dataclass(eq=False)
 class Track(LastFM):
     album: Album = None
     artist: Artist = None
 
     def __str__(self):
         return f'{self.name} / {self.album} / {self.artist}'
+
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ \
+               and \
+               (self.name, self.album, self.artist) == (other.name, self.album, other.artist)
 
 
 class WeeklyChart:
@@ -94,3 +107,8 @@ class Scrobble:
 
     def __str__(self):
         return self.track
+
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ \
+               and \
+               (self.track, self.time) == (other.track, self.time)

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 from copy import deepcopy
 import logging
+from time import sleep
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
@@ -59,6 +60,7 @@ class Network:
 
         if 200 <= response.status_code < 300:
             logger.debug(f'{http_method} {method} {response.status_code}')
+            self.retry_counter = 0
             return resp
 
         code = resp.get('error', None)
@@ -68,6 +70,7 @@ class Network:
             if code in [8, 11, 16]:
                 if self.retry_counter < 5:
                     self.retry_counter += 1
+                    sleep(2)
                     logger.warning(f'{method} {response.status_code} {code} {message} retyring')
                     return self.net_call(http_method=http_method,
                                          method=method,
@@ -134,11 +137,7 @@ class Network:
 
         items = iterator.items
 
-        if len(items) >= 1:
-            if items[0].get('@attr', {}).get('nowplaying', None):
-                items.pop(0)
-
-        return [self.parse_scrobble(i) for i in items[:limit]]
+        return [self.parse_scrobble(i) for i in items[:limit] if i.get('date')]
 
     def get_scrobbles_from_date(self,
                                 input_date: date,
@@ -423,7 +422,7 @@ class PageCollection:
         self.method = method
         self.params = params
         self.pages: List[Page] = []
-        self.page_limit = page_limit
+        self.page_limit = min(page_limit, 200)
         self.response_limit = response_limit
         self.counter = 0
 
