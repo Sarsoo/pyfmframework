@@ -367,6 +367,7 @@ class Network:
                       mbid=track_dict.get('mbid', 'n/a'),
                       listeners=int(track_dict.get('listeners', 0)),
                       play_count=int(track_dict.get('playcount', 0)),
+                      duration=int(track_dict['duration']) if track_dict.get('duration') else None,
                       user_scrobbles=int(track_dict.get('userplaycount', 0)),
                       wiki=self.parse_wiki(track_dict['wiki']) if track_dict.get('wiki', None) else None,
                       images=[self.parse_image(i) for i in track_dict.get('image', [])])

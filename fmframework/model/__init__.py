@@ -73,6 +73,7 @@ class Album(LastFM):
 class Track(LastFM):
     album: Album = None
     artist: Artist = None
+    duration: int = None
 
     def __str__(self):
         return f'{self.name} / {self.album} / {self.artist}'

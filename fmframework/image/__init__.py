@@ -3,7 +3,7 @@ from typing import List
 from datetime import date
 
 from fmframework.net.network import Network
-from fmframework.chart import get_populated_album_chart
+from fmframework.net.scrape import UserScraper
 from fmframework.image.downloader import Downloader, ImageSizeNotAvailableException
 from fmframework.model import Image
 
@@ -121,11 +121,11 @@ class AlbumChartCollage:
                    image_width: int = 5,
                    check_cache=True,
                    cache=True):
-        chart = get_populated_album_chart(net=net,
-                                          username=username,
-                                          from_date=from_date,
-                                          to_date=to_date,
-                                          limit=limit)
+        chart = UserScraper.get_album_chart(net=net,
+                                            username=username,
+                                            from_date=from_date,
+                                            to_date=to_date,
+                                            limit=limit)
         return get_image_grid_from_objects(objects=chart,
                                            image_size=image_size,
                                            image_width=image_width,
