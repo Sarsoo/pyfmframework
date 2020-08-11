@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Union
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -11,8 +12,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class LibraryScraper:
     rsession = Session()
+
+    @staticmethod
+    def api_date_range_to_url_string(period: Network.Range):
+        if period == Network.Range.WEEK:
+            return 'LAST_7_DAYS'
+        elif period == Network.Range.MONTH:
+            return 'LAST_30_DAYS'
+        elif period == Network.Range.QUARTER:
+            return 'LAST_90_DAYS'
+        elif period == Network.Range.HALFYEAR:
+            return 'LAST_180_DAYS'
+        elif period == Network.Range.YEAR:
+            return 'LAST_365_DAYS'
+        elif period == Network.Range.OVERALL:
+            return 'ALL'
+        else:
+            raise TypeError(f'invalid period provided, {period} / {type(period)}')
 
     @staticmethod
     def get_scrobbled_tracks(username: str, artist: str, net: Network = None, whole_track=True,
@@ -78,7 +97,6 @@ class LibraryScraper:
             return track_objects
         else:
             logger.error(f'no tracks returned for page 1 of {artist} / {username}')
-
 
     @staticmethod
     def get_scrobbled_albums(username: str, artist: str, net: Network = None, whole_album=True,
@@ -292,7 +310,6 @@ class LibraryScraper:
                     scrobble_datetime = None
                     logger.error(f'{len(timestamp_parts)} timestamp parts found, {timestamp_parts}')
 
-
                 track_objects.append(Scrobble(track=Track(name=name_cell.string,
                                                           artist=Artist(name=artist),
                                                           album=Album(name=album_cell.string,
@@ -300,6 +317,10 @@ class LibraryScraper:
                                                           url=name_cell['href']),
                                               time=scrobble_datetime)
                                      )
+
+            length = len(track_objects)
+            for scrobble in track_objects:
+                scrobble.track.user_scrobbles = length
 
             return track_objects
         else:
@@ -314,7 +335,7 @@ class LibraryScraper:
 
                                    include_pages=False,
                                    from_date: datetime = None, to_date: datetime = None,
-                                   date_preset: str = None):
+                                   date_preset: Union[str, Network.Range] = None):
         logger.debug(f'loading page {page} of {artist} for {username}')
 
         url = f'https://www.last.fm/user/{username}/library/music/{parse.quote_plus(artist)}'
@@ -332,12 +353,18 @@ class LibraryScraper:
         if from_date and to_date:
             url += f'&from={from_date.strftime("%Y-%m-%d")}&to={to_date.strftime("%Y-%m-%d")}'
         elif date_preset:
-            date_preset = date_preset.strip().upper()
-            if date_preset not in ['LAST_7_DAYS', 'LAST_30_DAYS', 'LAST_90_DAYS',
-                                   'LAST_180_DAYS', 'LAST_365_DAYS', 'ALL']:
-                raise ValueError(f'date range {date_preset} not of allowed value')
+            if isinstance(date_preset, str):
+                date_preset = date_preset.strip().upper()
+                if date_preset not in ['LAST_7_DAYS', 'LAST_30_DAYS', 'LAST_90_DAYS',
+                                       'LAST_180_DAYS', 'LAST_365_DAYS', 'ALL']:
+                    raise ValueError(f'date range {date_preset} not of allowed value')
+                url += f'&date_preset={date_preset}'
 
-            url += f'&date_preset={date_preset}'
+            elif isinstance(date_preset, Network.Range):
+                url += f'&date_preset={LibraryScraper.api_date_range_to_url_string(date_preset)}'
+
+            else:
+                raise TypeError(f'invalid period provided, {date_preset} / {type(date_preset)}')
 
         html = LibraryScraper.rsession.get(url)
 
@@ -350,7 +377,7 @@ class LibraryScraper:
                 objs = [i for i in list_section.tbody.find_all('tr') if i.find('td', class_='chartlist-name')]
 
                 if include_pages:
-                    return (objs, len(parser.find_all('li', class_='pagination-page')))
+                    return objs, len(parser.find_all('li', class_='pagination-page'))
                 else:
                     return objs
             else:
@@ -358,6 +385,7 @@ class LibraryScraper:
 
         else:
             logger.error(f'HTTP error occurred {html.status_code}')
+
 
 class UserScraper:
     rsession = Session()
