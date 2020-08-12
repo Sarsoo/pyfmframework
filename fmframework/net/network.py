@@ -101,7 +101,7 @@ class Network:
 
         return self.net_call(http_method='GET', method=method, params=data)
 
-    def get_user_scrobble_count(self, username: str = None) -> int:
+    def user_scrobble_count(self, username: str = None) -> int:
         if username is None:
             username = self.username
         logger.info(f'getting scrobble count {username}')
@@ -111,12 +111,12 @@ class Network:
                 .get('playcount', None)
         )
 
-    def get_recent_tracks(self,
-                          username: str = None,
-                          limit: int = None,
-                          from_time: datetime = None,
-                          to_time: datetime = None,
-                          page_limit: int = 50) -> Optional[List[Scrobble]]:
+    def recent_tracks(self,
+                      username: str = None,
+                      limit: int = None,
+                      from_time: datetime = None,
+                      to_time: datetime = None,
+                      page_limit: int = 50) -> Optional[List[Scrobble]]:
         if limit is not None:
             logger.info(f'pulling {limit} tracks')
         else:
@@ -139,35 +139,35 @@ class Network:
 
         return [self.parse_scrobble(i) for i in items[:limit] if i.get('date')]
 
-    def get_scrobbles_from_date(self,
-                                input_date: date,
-                                username: str = None,
-                                limit: int = None) -> Optional[List[Scrobble]]:
+    def scrobbles_from_date(self,
+                            input_date: date,
+                            username: str = None,
+                            limit: int = None) -> Optional[List[Scrobble]]:
         logger.info(f'getting {input_date} scrobbles for {username or self.username}')
         midnight = time(hour=0, minute=0, second=0)
 
         from_date = datetime.combine(date=input_date, time=midnight)
         to_date = datetime.combine(date=input_date + timedelta(days=1), time=midnight)
 
-        return self.get_recent_tracks(username=username, from_time=from_date, to_time=to_date, limit=limit)
+        return self.recent_tracks(username=username, from_time=from_date, to_time=to_date, limit=limit)
 
-    def get_scrobble_count_from_date(self,
-                                     input_date: date,
-                                     username: str = None,
-                                     limit: int = None) -> int:
+    def count_scrobbles_from_date(self,
+                                  input_date: date,
+                                  username: str = None,
+                                  limit: int = None) -> int:
         logger.info(f'getting {input_date} scrobble count for {username or self.username}')
 
-        scrobbles = self.get_scrobbles_from_date(input_date=input_date, username=username, limit=limit)
+        scrobbles = self.scrobbles_from_date(input_date=input_date, username=username, limit=limit)
 
         if scrobbles:
             return len(scrobbles)
         else:
             return 0
 
-    def get_track(self,
-                  name: str,
-                  artist: str,
-                  username: str = None) -> Optional[Track]:
+    def track(self,
+              name: str,
+              artist: str,
+              username: str = None) -> Optional[Track]:
         logger.info(f'getting {name} / {artist} for {username or self.username}')
 
         resp = self.get_request('track.getInfo',
@@ -180,10 +180,10 @@ class Network:
         else:
             logging.error(f'abnormal response - {resp}')
 
-    def get_album(self,
-                  name: str,
-                  artist: str,
-                  username: str = None) -> Optional[Album]:
+    def album(self,
+              name: str,
+              artist: str,
+              username: str = None) -> Optional[Album]:
         logger.info(f'getting {name} / {artist} for {username or self.username}')
 
         resp = self.get_request('album.getInfo',
@@ -196,9 +196,9 @@ class Network:
         else:
             logging.error(f'abnormal response - {resp}')
 
-    def get_artist(self,
-                   name: str,
-                   username: str = None) -> Optional[Artist]:
+    def artist(self,
+               name: str,
+               username: str = None) -> Optional[Artist]:
         logger.info(f'getting {name} for {username or self.username}')
 
         resp = self.get_request('artist.getInfo',
@@ -210,10 +210,10 @@ class Network:
         else:
             logging.error(f'abnormal response - {resp}')
 
-    def get_top_tracks(self,
-                       period: Range,
-                       username: str = None,
-                       limit: int = None):
+    def top_tracks(self,
+                   period: Range,
+                   username: str = None,
+                   limit: int = None):
         if limit is not None:
             logger.info(f'pulling top {limit} tracks from {period.value} for {username or self.username}')
         else:
@@ -229,10 +229,10 @@ class Network:
 
         return [self.parse_track(i) for i in iterator.items]
 
-    def get_top_albums(self,
-                       period: Range,
-                       username: str = None,
-                       limit: int = None):
+    def top_albums(self,
+                   period: Range,
+                   username: str = None,
+                   limit: int = None):
         if limit is not None:
             logger.info(f'pulling top {limit} albums from {period.value} for {username or self.username}')
         else:
@@ -248,10 +248,10 @@ class Network:
 
         return [self.parse_chart_album(i) for i in iterator.items]
 
-    def get_top_artists(self,
-                        period: Range,
-                        username: str = None,
-                        limit: int = None):
+    def top_artists(self,
+                    period: Range,
+                    username: str = None,
+                    limit: int = None):
         if limit is not None:
             logger.info(f'pulling top {limit} artists from {period.value} for {username or self.username}')
         else:
@@ -267,7 +267,7 @@ class Network:
 
         return [self.parse_artist(i) for i in iterator.items]
 
-    def get_weekly_charts(self, username: str = None):
+    def weekly_charts(self, username: str = None):
         logger.info('getting weekly chart list')
 
         resp = self.get_request('user.getweeklychartlist', user=username or self.username)
@@ -277,13 +277,13 @@ class Network:
         else:
             logger.error('no response')
 
-    def get_weekly_chart(self,
-                         object_type,
-                         chart: WeeklyChart = None,
-                         from_time: int = None,
-                         to_time: int = None,
-                         username: str = None,
-                         limit: int = None):
+    def weekly_chart(self,
+                     object_type,
+                     chart: WeeklyChart = None,
+                     from_time: int = None,
+                     to_time: int = None,
+                     username: str = None,
+                     limit: int = None):
 
         if object_type not in ['album', 'artist', 'track']:
             raise ValueError('invalid object type')

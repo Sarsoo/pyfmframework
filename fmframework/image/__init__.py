@@ -58,15 +58,15 @@ def get_image_grid_from_objects(objects,
         logger.debug(f'downloading image {counter+1} of {len(objects)}')
         try:
             if image_size is None:
-                downloaded = loader.download_best_image(iter_object,
-                                                        final_scale=final_scale,
-                                                        check_cache=check_cache,
-                                                        cache=cache)
+                downloaded = loader.best_image(iter_object,
+                                               final_scale=final_scale,
+                                               check_cache=check_cache,
+                                               cache=cache)
             else:
-                downloaded = loader.download_image_by_size(iter_object,
-                                                           size=image_size,
-                                                           check_cache=check_cache,
-                                                           cache=cache)
+                downloaded = loader.image_by_size(iter_object,
+                                                  size=image_size,
+                                                  check_cache=check_cache,
+                                                  cache=cache)
 
             if downloaded is not None:
                 if overlay_count:
@@ -100,9 +100,9 @@ class AlbumChartCollage:
                             image_width: int = 5,
                             check_cache=True,
                             cache=True):
-        chart = net.get_top_albums(username=username,
-                                   period=chart_range,
-                                   limit=limit)
+        chart = net.top_albums(username=username,
+                               period=chart_range,
+                               limit=limit)
         return get_image_grid_from_objects(objects=chart,
                                            image_size=image_size,
                                            image_width=image_width,
@@ -121,11 +121,11 @@ class AlbumChartCollage:
                    image_width: int = 5,
                    check_cache=True,
                    cache=True):
-        chart = UserScraper.get_album_chart(net=net,
-                                            username=username,
-                                            from_date=from_date,
-                                            to_date=to_date,
-                                            limit=limit)
+        chart = UserScraper.album_chart(net=net,
+                                        username=username,
+                                        from_date=from_date,
+                                        to_date=to_date,
+                                        limit=limit)
         return get_image_grid_from_objects(objects=chart,
                                            image_size=image_size,
                                            image_width=image_width,

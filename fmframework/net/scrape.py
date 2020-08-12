@@ -34,14 +34,14 @@ class LibraryScraper:
             raise TypeError(f'invalid period provided, {period} / {type(period)}')
 
     @staticmethod
-    def get_scrobbled_tracks(username: str, artist: str, net: Network = None, whole_track=True,
-                             from_date: datetime = None, to_date: datetime = None,
-                             date_preset: str = None):
+    def artist_tracks(username: str, artist: str, net: Network = None, whole_track=True,
+                      from_date: datetime = None, to_date: datetime = None,
+                      date_preset: str = None):
         logger.info(f"loading {artist}'s tracks for {username}")
 
-        tracks = LibraryScraper.get_scraped_scrobbled_tracks(username=username, artist=artist,
-                                                             from_date=from_date, to_date=to_date,
-                                                             date_preset=date_preset)
+        tracks = LibraryScraper.scraped_artist_tracks(username=username, artist=artist,
+                                                      from_date=from_date, to_date=to_date,
+                                                      date_preset=date_preset)
 
         if whole_track and net is None:
             raise NameError('Network required for populating tracks')
@@ -50,7 +50,7 @@ class LibraryScraper:
         if tracks is not None:
             if whole_track:
                 for track in tracks:
-                    populated_tracks.append(net.get_track(name=track.name, artist=track.artist.name, username=username))
+                    populated_tracks.append(net.track(name=track.name, artist=track.artist.name, username=username))
 
                 return populated_tracks
             else:
@@ -59,25 +59,25 @@ class LibraryScraper:
             logger.error(f'no scraped tracks returned for {artist} / {username}')
 
     @staticmethod
-    def get_scraped_scrobbled_tracks(username: str, artist: str,
-                                     from_date: datetime = None, to_date: datetime = None,
-                                     date_preset: str = None):
+    def scraped_artist_tracks(username: str, artist: str,
+                              from_date: datetime = None, to_date: datetime = None,
+                              date_preset: str = None):
         logger.info(f'loading page scraped {artist} tracks for {username}')
 
-        page1 = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist, page=1,
-                                                          url_key='tracks', include_pages=True,
-                                                          from_date=from_date, to_date=to_date,
-                                                          date_preset=date_preset)
+        page1 = LibraryScraper.scraped_artist_subpage(username=username, artist=artist, page=1,
+                                                      url_key='tracks', include_pages=True,
+                                                      from_date=from_date, to_date=to_date,
+                                                      date_preset=date_preset)
 
         if page1 is not None:
             tracks = page1[0]
             for page_number in range(page1[1] - 1):
 
-                page = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist,
-                                                                 url_key='tracks',
-                                                                 page=page_number + 2,
-                                                                 from_date=from_date, to_date=to_date,
-                                                                 date_preset=date_preset)
+                page = LibraryScraper.scraped_artist_subpage(username=username, artist=artist,
+                                                             url_key='tracks',
+                                                             page=page_number + 2,
+                                                             from_date=from_date, to_date=to_date,
+                                                             date_preset=date_preset)
 
                 if page is not None:
                     tracks += page
@@ -99,14 +99,14 @@ class LibraryScraper:
             logger.error(f'no tracks returned for page 1 of {artist} / {username}')
 
     @staticmethod
-    def get_scrobbled_albums(username: str, artist: str, net: Network = None, whole_album=True,
-                             from_date: datetime = None, to_date: datetime = None,
-                             date_preset: str = None):
+    def artists_albums(username: str, artist: str, net: Network = None, whole_album=True,
+                       from_date: datetime = None, to_date: datetime = None,
+                       date_preset: str = None):
         logger.info(f"loading {artist}'s albums for {username}")
 
-        albums = LibraryScraper.get_scraped_scrobbled_albums(username=username, artist=artist,
-                                                             from_date=from_date, to_date=to_date,
-                                                             date_preset=date_preset)
+        albums = LibraryScraper.scraped_artists_albums(username=username, artist=artist,
+                                                       from_date=from_date, to_date=to_date,
+                                                       date_preset=date_preset)
 
         if whole_album and net is None:
             raise NameError('Network required for populating albums')
@@ -115,7 +115,7 @@ class LibraryScraper:
         if albums is not None:
             if whole_album:
                 for album in albums:
-                    populated_albums.append(net.get_album(name=album.name, artist=album.artist.name, username=username))
+                    populated_albums.append(net.album(name=album.name, artist=album.artist.name, username=username))
 
                 return populated_albums
             else:
@@ -124,26 +124,26 @@ class LibraryScraper:
             logger.error(f'no scraped albums returned for {artist} / {username}')
 
     @staticmethod
-    def get_scraped_scrobbled_albums(username: str, artist: str,
-                                     from_date: datetime = None, to_date: datetime = None,
-                                     date_preset: str = None):
+    def scraped_artists_albums(username: str, artist: str,
+                               from_date: datetime = None, to_date: datetime = None,
+                               date_preset: str = None):
         logger.info(f'loading page scraped {artist} albums for {username}')
 
-        page1 = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist, page=1,
-                                                          url_key='albums',
-                                                          include_pages=True,
-                                                          from_date=from_date, to_date=to_date,
-                                                          date_preset=date_preset)
+        page1 = LibraryScraper.scraped_artist_subpage(username=username, artist=artist, page=1,
+                                                      url_key='albums',
+                                                      include_pages=True,
+                                                      from_date=from_date, to_date=to_date,
+                                                      date_preset=date_preset)
 
         if page1 is not None:
             albums = page1[0]
             for page_number in range(page1[1] - 1):
 
-                page = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist,
-                                                                 url_key='albums',
-                                                                 page=page_number + 2,
-                                                                 from_date=from_date, to_date=to_date,
-                                                                 date_preset=date_preset)
+                page = LibraryScraper.scraped_artist_subpage(username=username, artist=artist,
+                                                             url_key='albums',
+                                                             page=page_number + 2,
+                                                             from_date=from_date, to_date=to_date,
+                                                             date_preset=date_preset)
 
                 if page is not None:
                     albums += page
@@ -165,14 +165,14 @@ class LibraryScraper:
             logger.error(f'no albums returned for page 1 of {artist} / {username}')
 
     @staticmethod
-    def get_albums_tracks(username: str, artist: str, album: str, net: Network = None, whole_track=True,
-                          from_date: datetime = None, to_date: datetime = None,
-                          date_preset: str = None):
+    def album_tracks(username: str, artist: str, album: str, net: Network = None, whole_track=True,
+                     from_date: datetime = None, to_date: datetime = None,
+                     date_preset: str = None):
         logger.info(f"loading {artist}'s {album} tracks for {username}")
 
-        tracks = LibraryScraper.get_scraped_albums_tracks(username=username, artist=artist, album=album,
-                                                          from_date=from_date, to_date=to_date,
-                                                          date_preset=date_preset)
+        tracks = LibraryScraper.scraped_album_tracks(username=username, artist=artist, album=album,
+                                                     from_date=from_date, to_date=to_date,
+                                                     date_preset=date_preset)
 
         if whole_track and net is None:
             raise NameError('Network required for populating tracks')
@@ -181,7 +181,7 @@ class LibraryScraper:
         if tracks is not None:
             if whole_track:
                 for track in tracks:
-                    populated_tracks.append(net.get_track(name=track.name, artist=track.artist.name, username=username))
+                    populated_tracks.append(net.track(name=track.name, artist=track.artist.name, username=username))
 
                 return populated_tracks
             else:
@@ -190,26 +190,26 @@ class LibraryScraper:
             logger.error(f'no scraped tracks returned for {album} / {artist} / {username}')
 
     @staticmethod
-    def get_scraped_albums_tracks(username: str, artist: str, album: str,
-                                  from_date: datetime = None, to_date: datetime = None,
-                                  date_preset: str = None):
+    def scraped_album_tracks(username: str, artist: str, album: str,
+                             from_date: datetime = None, to_date: datetime = None,
+                             date_preset: str = None):
         logger.info(f'loading page scraped {artist} albums for {username}')
 
-        page1 = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist, page=1,
-                                                          album=album,
-                                                          include_pages=True,
-                                                          from_date=from_date, to_date=to_date,
-                                                          date_preset=date_preset)
+        page1 = LibraryScraper.scraped_artist_subpage(username=username, artist=artist, page=1,
+                                                      album=album,
+                                                      include_pages=True,
+                                                      from_date=from_date, to_date=to_date,
+                                                      date_preset=date_preset)
 
         if page1 is not None:
             albums = page1[0]
             for page_number in range(page1[1] - 1):
 
-                page = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist,
-                                                                 album=album,
-                                                                 page=page_number + 2,
-                                                                 from_date=from_date, to_date=to_date,
-                                                                 date_preset=date_preset)
+                page = LibraryScraper.scraped_artist_subpage(username=username, artist=artist,
+                                                             album=album,
+                                                             page=page_number + 2,
+                                                             from_date=from_date, to_date=to_date,
+                                                             date_preset=date_preset)
 
                 if page is not None:
                     albums += page
@@ -233,14 +233,14 @@ class LibraryScraper:
             logger.error(f'no tracks returned for page 1 of {album} / {artist} / {username}')
 
     @staticmethod
-    def get_track_scrobbles(username: str, artist: str, track: str, net: Network = None, whole_track=True,
-                            from_date: datetime = None, to_date: datetime = None,
-                            date_preset: str = None):
+    def track_scrobbles(username: str, artist: str, track: str, net: Network = None, whole_track=True,
+                        from_date: datetime = None, to_date: datetime = None,
+                        date_preset: str = None):
         logger.info(f"loading {track} / {artist} for {username}")
 
-        tracks = LibraryScraper.get_scraped_track_scrobbles(username=username, artist=artist, track=track,
-                                                            from_date=from_date, to_date=to_date,
-                                                            date_preset=date_preset)
+        tracks = LibraryScraper.scraped_track_scrobbles(username=username, artist=artist, track=track,
+                                                        from_date=from_date, to_date=to_date,
+                                                        date_preset=date_preset)
 
         if whole_track and net is None:
             raise NameError('Network required for populating tracks')
@@ -249,12 +249,12 @@ class LibraryScraper:
         if tracks is not None:
             if whole_track:
                 for track in tracks:
-                    pulled_track = net.get_track(name=track.track.name,
-                                                 artist=track.track.artist.name,
-                                                 username=username)
-                    pulled_track.album = net.get_album(name=track.track.album.name,
-                                                       artist=track.track.album.name,
-                                                       username=username)
+                    pulled_track = net.track(name=track.track.name,
+                                             artist=track.track.artist.name,
+                                             username=username)
+                    pulled_track.album = net.album(name=track.track.album.name,
+                                                   artist=track.track.album.name,
+                                                   username=username)
                     populated_tracks.append(pulled_track)
 
                 return populated_tracks
@@ -264,26 +264,26 @@ class LibraryScraper:
             logger.error(f'no scraped tracks returned for {track} / {artist} / {username}')
 
     @staticmethod
-    def get_scraped_track_scrobbles(username: str, artist: str, track: str,
-                                    from_date: datetime = None, to_date: datetime = None,
-                                    date_preset: str = None):
+    def scraped_track_scrobbles(username: str, artist: str, track: str,
+                                from_date: datetime = None, to_date: datetime = None,
+                                date_preset: str = None):
         logger.info(f'loading page scraped {track} / {artist} for {username}')
 
-        page1 = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist, page=1,
-                                                          track=track,
-                                                          include_pages=True,
-                                                          from_date=from_date, to_date=to_date,
-                                                          date_preset=date_preset)
+        page1 = LibraryScraper.scraped_artist_subpage(username=username, artist=artist, page=1,
+                                                      track=track,
+                                                      include_pages=True,
+                                                      from_date=from_date, to_date=to_date,
+                                                      date_preset=date_preset)
 
         if page1 is not None:
             albums = page1[0]
             for page_number in range(page1[1] - 1):
 
-                page = LibraryScraper.get_scraped_artist_subpage(username=username, artist=artist,
-                                                                 track=track,
-                                                                 page=page_number + 2,
-                                                                 from_date=from_date, to_date=to_date,
-                                                                 date_preset=date_preset)
+                page = LibraryScraper.scraped_artist_subpage(username=username, artist=artist,
+                                                             track=track,
+                                                             page=page_number + 2,
+                                                             from_date=from_date, to_date=to_date,
+                                                             date_preset=date_preset)
 
                 if page is not None:
                     albums += page
@@ -327,15 +327,15 @@ class LibraryScraper:
             logger.error(f'no scrobbles returned for page 1 of {track} / {artist} / {username}')
 
     @staticmethod
-    def get_scraped_artist_subpage(username: str, artist: str, page: int,
+    def scraped_artist_subpage(username: str, artist: str, page: int,
 
-                                   url_key: str = None,
-                                   album: str = None,
-                                   track: str = None,
+                               url_key: str = None,
+                               album: str = None,
+                               track: str = None,
 
-                                   include_pages=False,
-                                   from_date: datetime = None, to_date: datetime = None,
-                                   date_preset: Union[str, Network.Range] = None):
+                               include_pages=False,
+                               from_date: datetime = None, to_date: datetime = None,
+                               date_preset: Union[str, Network.Range] = None):
         logger.debug(f'loading page {page} of {artist} for {username}')
 
         url = f'https://www.last.fm/user/{username}/library/music/{parse.quote_plus(artist)}'
@@ -391,23 +391,23 @@ class UserScraper:
     rsession = Session()
 
     @staticmethod
-    def get_album_chart(net: Network, username: str, from_date: date, to_date: date, limit: int):
+    def album_chart(net: Network, username: str, from_date: date, to_date: date, limit: int):
         """Scrape chart from last.fm frontend before pulling each from the backend for a complete object"""
 
-        chart = UserScraper.get_scraped_album_chart(username or net.username, from_date, to_date, limit)
+        chart = UserScraper.scraped_album_chart(username or net.username, from_date, to_date, limit)
         logger.info('populating scraped albums')
         albums = []
         for counter, scraped in enumerate(chart):
             logger.debug(f'populating {counter+1} of {len(chart)}')
             try:
-                albums.append(net.get_album(name=scraped.name, artist=scraped.artist.name))
+                albums.append(net.album(name=scraped.name, artist=scraped.artist.name))
             except LastFMNetworkException:
                 logger.exception(f'error occured during album retrieval')
 
         return albums
 
     @staticmethod
-    def get_scraped_album_chart(username: str, from_date: date, to_date: date, limit: int):
+    def scraped_album_chart(username: str, from_date: date, to_date: date, limit: int):
         """Scrape 'light' objects from last.fm frontend based on date range and limit"""
 
         logger.info(f'scraping album chart from {from_date} to {to_date} for {username}')
@@ -418,14 +418,14 @@ class UserScraper:
 
         albums = []
         for i in range(pages):
-            scraped_albums = UserScraper.get_scraped_album_chart_page(username, from_date, to_date, i + 1)
+            scraped_albums = UserScraper.scraped_album_chart_page(username, from_date, to_date, i + 1)
             if scraped_albums is not None:
                 albums += scraped_albums
 
         return albums[:limit]
 
     @staticmethod
-    def get_scraped_album_chart_page(username: str, from_date: date, to_date: date, page: int):
+    def scraped_album_chart_page(username: str, from_date: date, to_date: date, page: int):
         """Scrape 'light' objects single page of last.fm frontend based on date range"""
 
         logger.debug(f'loading page {page} from {from_date} to {to_date} for {username}')

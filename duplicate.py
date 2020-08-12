@@ -1,5 +1,6 @@
 from fmframework.net.network import Network, LastFMNetworkException
 
+from urllib import parse
 from csv import DictWriter
 import os
 import logging
@@ -42,7 +43,7 @@ def check_for_duplicates(fmkey, retrieval_limit):
     net.retry_counter = 20
 
     try:
-        scrobbles = net.get_recent_tracks(limit=retrieval_limit, page_limit=200)
+        scrobbles = net.recent_tracks(limit=retrieval_limit, page_limit=200)
 
         if not scrobbles:
             logger.error('No scrobbles returned')
@@ -60,8 +61,8 @@ def check_for_duplicates(fmkey, retrieval_limit):
         for duplicate in duplicates_found:
             print(f'{duplicate[1].time} - {duplicate[0].time}, {duplicate[0].track}')
             print(f'https://www.last.fm/user/{username}/library/music/'
-                  f'{duplicate[0].track.artist.name.replace(" ", "+")}/_/'
-                  f'{duplicate[0].track.name.replace(" ", "+")}')
+                  f'{parse.quote_plus(duplicate[0].track.artist.name)}/_/'
+                  f'{parse.quote_plus(duplicate[0].track.name)}')
             print(f'https://www.last.fm/user/{username}/library'
                   f'?from={duplicate[0].time.strftime("%Y-%m-%d")}'
                   f'&to={duplicate[1].time.strftime("%Y-%m-%d")}')
@@ -84,8 +85,8 @@ def check_for_duplicates(fmkey, retrieval_limit):
                     'album': duplicate[0].track.album.name,
                     'artist': duplicate[0].track.artist.name,
                     'track url': f'https://www.last.fm/user/{username}/library/music/'
-                                 f'{duplicate[0].track.artist.name.replace(" ", "+")}/_/'
-                                 f'{duplicate[0].track.name.replace(" ", "+")}',
+                                 f'{parse.quote_plus(duplicate[0].track.artist.name)}/_/'
+                                 f'{parse.quote_plus(duplicate[0].track.name)}',
                     'scrobbles url': f'https://www.last.fm/user/{username}/library'
                                      f'?from={duplicate[1].time.strftime("%Y-%m-%d")}'
                                      f'&to={duplicate[0].time.strftime("%Y-%m-%d")}'

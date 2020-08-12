@@ -20,7 +20,7 @@ def backup_scrobbles(file_path):
     net = Network(username='sarsoo', api_key=os.environ['FMKEY'])
 
     try:
-        scrobbles = net.get_recent_tracks()
+        scrobbles = net.recent_tracks()
 
         if not os.path.exists(file_path):
             os.makedirs(file_path)
