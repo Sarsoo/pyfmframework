@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "fmframework"
+version = "1.0.0"
+description = "Last.fm HTTP wrapper library"
+authors = ["andy <andy@sarsoo.xyz>"]
+repository = "https://github.com/Sarsoo/fmframework"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.24.0"
+beautifulsoup4 = "^4.9.3"
+
+[tool.poetry.dev-dependencies]
+pylint = "2.5.3"
+
+[tool.poetry.extras]
+image = ["opencv-python", "numpy"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

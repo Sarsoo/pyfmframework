@@ -6,3 +6,4 @@ __pycache__
 .idea
 .fm
 scratch.py
+poetry.lock
