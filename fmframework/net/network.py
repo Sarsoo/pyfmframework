@@ -346,7 +346,7 @@ class Network:
                      mbid=album_dict.get('mbid', 'n/a'),
                      listeners=int(album_dict.get('listeners', 0)),
                      play_count=int(album_dict.get('playcount', 0)),
-                     user_scrobbles=int(album_dict.get('userplaycount', 0)),
+                     user_scrobbles=int(album_dict.get('userplaycount', 0) if album_dict.get('userplaycount', 0) is not dict else 0),
                      wiki=self.parse_wiki(album_dict['wiki']) if album_dict.get('wiki', None) else None,
                      artist=album_dict.get('artist'),
                      images=[self.parse_image(i) for i in album_dict.get('image', [])])
