@@ -7,6 +7,8 @@ from time import sleep
 from enum import Enum
 from datetime import datetime, date, time, timedelta
 
+from requests import JSONDecodeError
+
 from fmframework.model import Album, Artist, Image, Wiki, WeeklyChart, Scrobble, Track
 
 
@@ -56,33 +58,39 @@ class Network:
                                          params=params,
                                          json=json,
                                          data=data)
-        resp = response.json()
 
-        if 200 <= response.status_code < 300:
-            logger.debug(f'{http_method} {method} {response.status_code}')
-            self.retry_counter = 0
-            return resp
+        try:
+            resp = response.json()
 
-        code = resp.get('error', None)
-        message = resp.get('message', None)
+            if 200 <= response.status_code < 300:
+                logger.debug(f'{http_method} {method} {response.status_code}')
+                self.retry_counter = 0
+                return resp
 
-        if code:
-            if code in [8, 11, 16]:
-                if self.retry_counter < 5:
-                    self.retry_counter += 1
-                    sleep(2)
-                    logger.warning(f'{method} {response.status_code} {code} {message} retyring')
-                    return self.net_call(http_method=http_method,
-                                         method=method,
-                                         params=params,
-                                         data=data,
-                                         json=json,
-                                         headers=headers)
-                else:
-                    self.retry_counter = 0
+            code = resp.get('error', None)
+            message = resp.get('message', None)
 
-        logger.error(f'{method} {response.status_code} {code} {message} retry limit reached')
-        raise LastFMNetworkException(http_code=response.status_code, error_code=code, message=message)
+            if code:
+                if code in [8, 11, 16]:
+                    if self.retry_counter < 5:
+                        self.retry_counter += 1
+                        sleep(2)
+                        logger.warning(f'{method} {response.status_code} {code} {message} retrying')
+                        return self.net_call(http_method=http_method,
+                                             method=method,
+                                             params=params,
+                                             data=data,
+                                             json=json,
+                                             headers=headers)
+                    else:
+                        self.retry_counter = 0
+
+            logger.error(f'{method} {response.status_code} {code} {message} retry limit reached')
+            raise LastFMNetworkException(http_code=response.status_code, error_code=code, message=message)
+
+        except JSONDecodeError:
+            logger.warning(f"failed to decode json from resp, {method} {response} -> {response.content}")
+            return {}
 
     def get_request(self,
                     method: str,

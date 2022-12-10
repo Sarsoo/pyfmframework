@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fmframework"
-version = "1.0.0"
+version = "1.0.1"
 description = "Last.fm HTTP wrapper library"
 authors = ["andy <andy@sarsoo.xyz>"]
 repository = "https://github.com/Sarsoo/fmframework"
