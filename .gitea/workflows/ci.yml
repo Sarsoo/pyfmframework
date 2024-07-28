@@ -9,7 +9,6 @@ jobs:
   publishLib:
     runs-on: ubuntu-latest
     name: Package Library
-    needs: [ build ] # for ignoring bad builds
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
